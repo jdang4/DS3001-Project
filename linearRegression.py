@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd 
 from collections import Counter
 from sklearn.metrics import mean_squared_error
+from sklearn import preprocessing
 
 import matplotlib.pyplot as plt 
 
@@ -36,9 +37,15 @@ if __name__ == "__main__" :
 	dataFile['TimeToSubway'] = dataFile['TimeToSubway'].map(TimeToSubway_quantitative)
 	dataFile['TimeToBusStop'] = dataFile['TimeToBusStop'].map(TimeToBusStop_quantitative)
 
-	corr = dataFile.corr()
+	correlation = dataFile.corr()
 
-	print(corr.iloc[0])
+	# getting all the columns with quantitative types
+	# referenced at https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.dtypes.html
+	quantitative_attributes = dataFile.dtypes[dataFile.dtypes != 'object'].index
+
+	dataFile = dataFile[quantitative_attributes]
+
+	print(dataFile)
 
 
 
