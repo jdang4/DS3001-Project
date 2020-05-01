@@ -1,3 +1,4 @@
+import csv
 import numpy as np 
 import pandas as pd 
 import matplotlib.pyplot as plt 
@@ -31,30 +32,27 @@ TimeToBusStop_quantitative = {
 	'10min~15min' : 0
 }
 
+coefficientMap = {}
 
-def define_for_price_vs_size(dataFile) :
-	x = dataFile.iloc[:, dataFile.columns == 'Size(sqf)'].values
+#################################################################################
 
-	y = dataFile.iloc[:, dataFile.columns == 'SalePrice'].values
+def getCleanCSV(path, cleanPath) :
+	read = pd.read_csv(path)
 
-	return x, y
+	read.sort_values(by='SalePrice').loc[read['SalePrice'] > 510000]
 
+	with open(path, 'r') as file_in :
+		with open(cleanPath, 'w') as file_out :
+			writer = csv.writer(file_out)
 
-def define_for_price_vs_subway(dataFile) :
-	x = dataFile.iloc[:, dataFile.columns == 'TimeToSubway'].values
+			for row in csv.reader(file_in) :
+				writer.writerow(row[:16])
 
-	y = dataFile.iloc[:, dataFile.columns == 'SalePrice'].values
+	clean = pd.read_csv(cleanPath)
 
-	return x, y
+	return clean 
 
-
-def define_for_price_vs_bus_stop(dataFile) :
-	x = dataFile.iloc[:, dataFile.columns == 'TimeToBusStop'].values
-
-	y = dataFile.iloc[:, dataFile.columns == 'SalePrice'].values
-
-	return x, y
-
+#################################################################################
 
 def define_for_price_vs_all(dataFile) :
 	x = dataFile.iloc[:, 1:].values
@@ -67,6 +65,7 @@ def define_for_price_vs_all(dataFile) :
 	return x, y
 
 
+#################################################################################
 
 def plotLinearRegressionModel(lr_model, testingX, testingY) :
 	plt.scatter(lr_model.predict(testingX), testingY)
@@ -76,28 +75,58 @@ def plotLinearRegressionModel(lr_model, testingX, testingY) :
 	plt.show()
 
 
+#################################################################################
+
 def showCoefficientsRegressionModel(coef, dataFile) :
 
 	coef_df = pd.Series(coef[0], index=dataFile.columns[1:])
 
 	plt.rcParams['figure.figsize'] = (8, 10)
 
-	coef_df.sort_values().plot(kind = 'barh')
+	coef_df.plot(kind = 'barh')
 
 	plt.title('Coefficients Regression Model')
 	plt.xlabel('Coefficient Value')
 	plt.show()
 
+#################################################################################
+
+def getBoxPlot(dataFile) :
+
+	plt.rcParams['figure.figsize'] = (10, 10)
+	plt.boxplot(x=dataFile['SalePrice'])
+	plt.show()
+
+#################################################################################
+
+def createCoefficientMap(dataFile, lr_model) :
+	tempList = lr_model.coef_
+
+	coefficient_list = []
+	for c in tempList[0] :
+		coefficient_list.append(c)
+
+	
+
+	for i in range(1, len(dataFile.columns)) :
+		coef_index = i - 1
+
+		column_name = dataFile.columns[i]
+
+		coefficientMap[column_name] = coefficient_list[coef_index]
+
+#################################################################################
 
 if __name__ == "__main__" :
 
-	dataFile = getCSV('dataset/Daegu_Real_Estate_data.csv')
+	#dataFile = getCSV('dataset/Daegu_Real_Estate_data.csv')
+
+	dataFile = getCleanCSV('dataset/Daegu_Real_Estate_data.csv', 
+		'dataset/Daegu_Real_Estate_data_clean.csv')
 
 	# mapping public transportation columns to its quantitative value (based on my own common sense)
 	dataFile['TimeToSubway'] = dataFile['TimeToSubway'].map(TimeToSubway_quantitative)
 	dataFile['TimeToBusStop'] = dataFile['TimeToBusStop'].map(TimeToBusStop_quantitative)
-
-
 
 	# getting all the columns with quantitative types
 	# referenced at https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.dtypes.html
@@ -119,10 +148,12 @@ if __name__ == "__main__" :
 	
 	lr_model.fit(trainingX, trainingY)
 
-	plotLinearRegressionModel(lr_model, testingX, testingY)
+	#plotLinearRegressionModel(lr_model, testingX, testingY)
 
-	showCoefficientsRegressionModel(lr_model.coef_, dataFile)
+	#showCoefficientsRegressionModel(lr_model.coef_, dataFile)
 	
+	createCoefficientMap(dataFile, lr_model)
+
 	trainingY_prediction = lr_model.predict(trainingX)
 	testingY_prediction = lr_model.predict(testingX)
 
@@ -131,3 +162,5 @@ if __name__ == "__main__" :
 
 	print('Root Mean Sqaure Error: %.2f' % (np.mean((lr_model.predict(testingX) - testingY)**2))**0.5)
 	print('Variance Score: %.2f' % lr_model.score(testingX, testingY))
+
+	
