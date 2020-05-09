@@ -1,3 +1,4 @@
+import sys
 import csv
 import numpy as np 
 import pandas as pd 
@@ -9,8 +10,6 @@ from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
 from sklearn import linear_model
 from sklearn import ensemble
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import accuracy_score
 
 
 def getCSV(path) :
@@ -101,8 +100,10 @@ def plotFeatureImportance(clf, dataFile) :
 
 	plt.rcParams['figure.figsize'] = (15, 10)
 	plt.subplot(1, 2, 2)
+	plt.title('Feature Importance')
 	plt.barh(pos, feature_importance[sorted_idx], align='center')
 	plt.yticks(pos, dataFile_temp.columns[sorted_idx])
+	plt.xlabel('Relative Importance (%)')
 	plt.show()
 
 #################################################################################
@@ -138,22 +139,16 @@ if __name__ == "__main__" :
 	
 	lr_model.fit(trainingX, trainingY)
 
-	#plotLinearRegressionModel(lr_model, testingX, testingY)
-
-	#showCoefficientsRegressionModel(lr_model.coef_, dataFile)
-
 	trainingY_prediction = lr_model.predict(trainingX)
 	testingY_prediction = lr_model.predict(testingX)
 
-	print('RMSE Train: %.2f' % mean_squared_error(trainingY, trainingY_prediction) ** 0.5)
-	print('RMSE Test: %.2f' % mean_squared_error(testingY, testingY_prediction) ** 0.5)
-
-	print('Root Mean Sqaure Error: %.2f' % (np.mean((lr_model.predict(testingX) - testingY)**2))**0.5)
-	print('Variance Score: %.2f' % lr_model.score(testingX, testingY))
+	rmse = np.mean((lr_model.predict(testingX) - testingY)**2)**0.5
+	#print('Root Mean Sqaure Error: %.2f' % rmse)
+	#print('Variance Score: %.2f' % lr_model.score(testingX, testingY))
 	
 	################################################################################################################################
 
-	# Fit Regression Model
+	# Performing Gradient Boosting
 
 	reducedDataFile = dataFile.copy(deep=True)
 	reducedDataFile.drop(['N_Parkinglot(Ground)', 'N_Parkinglot(Basement)'], axis=1, inplace=True)
@@ -174,46 +169,116 @@ if __name__ == "__main__" :
 
 	clf = ensemble.GradientBoostingRegressor(**params)
 
+	print('\nPlease Wait a Few Seconds for Gradient Boosting to Complete....')
 	clf.fit(X_train, Y_train.ravel())
-
-	value = [[2006, 2010, 7, 1910, 1, 1, 2, 3, 3, 0]]
-
-	default_yrBuilt = reducedDataFile.mean()[1]
-	default_yrSold = reducedDataFile.mean()[2]
-	default_monthSold = reducedDataFile.mean()[3]
-	default_size = reducedDataFile.mean()[4]
-	default_floor = reducedDataFile.mean()[5]
-	default_busStop = reducedDataFile.mean()[6]
-	default_subway = reducedDataFile.mean()[7]
-	default_apt = reducedDataFile.mean()[8]
-	default_manager = reducedDataFile.mean()[9]
-	default_elevator = reducedDataFile.mean()[10]
-
-	print(default_yrBuilt)
-	
-	print('Predicted SalePrice: %.2f' % clf.predict(value)[0])
 
 	new_rmse = mean_squared_error(Y_test, clf.predict(X_test))**0.5
 
-	print('New Root Mean Square Error: %.2f' % new_rmse)
-	print('New Variance Score:', clf.score(X_train, Y_train))
-	#plotFeatureImportance(clf, reducedDataFile)
-
+	#print('New Root Mean Square Error: %.2f' % new_rmse)
+	#print('New Variance Score:', clf.score(X_train, Y_train))
 
 	################################################################################################################################
 
-	# Decision Tree Classifier
-	
-	# performing K-folds Cross Validation to minimize overfitting error
-	# training: 70%
-	# testing: 30%
-	trainingX, testingX, trainingY, testingY = train_test_split(
-		x, y, train_size =0.7, test_size = 0.3, random_state=0)
+	# User Interaction Section
 
-	decisionTree = DecisionTreeClassifier(max_depth = 10, random_state=1)
+	print('\nWelcome to QuaranTeam Application!')
+	print('If no preference for the prompt, please enter \"N\"\n') 
+	
+	user_yrBuilt = input('Year Built: ') 
 
-	decisionTree.fit(trainingX, trainingY)
+	if user_yrBuilt == 'N' :
+		user_yrBuilt = reducedDataFile.mean()[1]
+
+	user_yrSold = input('Year Sold: ')
+
+	if user_yrSold == 'N' :
+		user_yrSold = reducedDataFile.mean()[2]
+
+	user_monthSold = input('Month Sold (Enter in the Month Number): ')
+
+	if user_monthSold == 'N' :
+		user_monthSold = reducedDataFile.mean()[3]
+
+	user_size = input('Size (sqf): ')
+
+	if user_size == 'N' :
+		user_size = reducedDataFile.mean()[4]
+
+	user_floor = input('Number of Floors in Apartment: ') 
+
+	if user_floor == 'N' :
+		user_floor = reducedDataFile.mean()[5]
+
+	print('\n#######################################################################')
+	print('How to Input For Bus Stop Distance')
+	print('0-5 minutes ==> 2')
+	print('5-10 minutes ==> 1')
+	print('10+ minutes ==> 0')
+	print('#######################################################################\n')
+
+	user_busStop = input('Please Enter in the Corresponding Integer Value of the Preferred Bus Stop Distance Listed Above: ')
+
+	if user_busStop == 'N' :
+		user_busStop = reducedDataFile.mean()[6]
+
+	print('\n#######################################################################')
+	print('How to input For Subway Stop Distance')
+	print('0-5 minutes ==> 4')
+	print('5-10 minutes ==> 3')
+	print('10-15 minutes ==> 2')
+	print('15+ minutes ==> 1')
+	print('No Subway Stop Nearby ==> 0') 
+	print('#######################################################################\n')
+
+	user_subway = input('Please Enter in the Corresponding Integer Value of the Preferred Subway Stop Distance Listed Above: ')
+
+	if user_subway == 'N' :
+		user_subway = reducedDataFile.mean()[7]
+
+	user_apt = input('\nNumber of Apartments: ')
+
+	if user_apt == 'N' :
+		user_apt = reducedDataFile.mean()[8]
+
+	user_manager = input('Number of Managers: ')
+
+	if user_manager == 'N' :
+		user_manager = reducedDataFile.mean()[9]
+
+	user_elevator = input('Number of Elevators: ')
+
+	if user_elevator == 'N' :
+		user_elevator = reducedDataFile.mean()[10]
+
 	
-	y_prediction = decisionTree.predict(testingX)
+	user_values = [user_yrBuilt, user_yrSold, user_monthSold, user_size, user_floor, user_busStop, user_subway, user_apt, user_manager, user_elevator]
+
+	for i in range(0, len(user_values)) :
+		try :
+			current_val = int(user_values[i]) 
+
+			if current_val < 0 :
+				raise Exception 
+
+			if i == 2 :
+				if current_val == 0 or current_val >= 13 :
+					raise Exception 
+
+			elif i == 5 :
+				if current_val > 2 :
+					raise Exception
+
+			elif i == 6 :
+				if current_val > 4 :
+					raise Exception
+			
+			user_values[i] = current_val 
+
+		except :
+			print('\nDetected An Invalid User Value')
+			print('Program Terminating!!!')
+			sys.exit()
 	
-	print('Decision Tree Classifier Accuracy:', accuracy_score(testingY, y_prediction))
+	user_values = [user_values]
+	
+	print('\nPredicted SalePrice Based on User Input: $%.2f\n' % clf.predict(user_values)[0])
