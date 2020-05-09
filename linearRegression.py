@@ -181,8 +181,8 @@ if __name__ == "__main__" :
 
 	# User Interaction Section
 
-	print('\nWelcome to QuaranTeam Application!')
-	print('If no preference for the prompt, please enter \"N\"\n') 
+	print('\nWelcome to QuaranTeam\'s Application!')
+	print('If no preference for the specified prompt, please enter \"N\"\n') 
 	
 	user_yrBuilt = input('Year Built: ') 
 
