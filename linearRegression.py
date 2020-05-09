@@ -188,6 +188,8 @@ if __name__ == "__main__" :
 	default_apt = reducedDataFile.mean()[8]
 	default_manager = reducedDataFile.mean()[9]
 	default_elevator = reducedDataFile.mean()[10]
+
+	print(default_yrBuilt)
 	
 	print('Predicted SalePrice: %.2f' % clf.predict(value)[0])
 
@@ -196,3 +198,22 @@ if __name__ == "__main__" :
 	print('New Root Mean Square Error: %.2f' % new_rmse)
 	print('New Variance Score:', clf.score(X_train, Y_train))
 	#plotFeatureImportance(clf, reducedDataFile)
+
+
+	################################################################################################################################
+
+	# Decision Tree Classifier
+	
+	# performing K-folds Cross Validation to minimize overfitting error
+	# training: 70%
+	# testing: 30%
+	trainingX, testingX, trainingY, testingY = train_test_split(
+		x, y, train_size =0.7, test_size = 0.3, random_state=0)
+
+	decisionTree = DecisionTreeClassifier(max_depth = 10, random_state=1)
+
+	decisionTree.fit(trainingX, trainingY)
+	
+	y_prediction = decisionTree.predict(testingX)
+	
+	print('Decision Tree Classifier Accuracy:', accuracy_score(testingY, y_prediction))
